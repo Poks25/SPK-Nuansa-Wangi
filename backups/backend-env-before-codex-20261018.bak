@@ -1,0 +1,5 @@
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=spk_parfum
+DB_USER=spk_app
+DB_PASSWORD=FcKX5i3SMZlgwndE6BBQlKmsCXwDeK7siIIfbaxZphDwn420
