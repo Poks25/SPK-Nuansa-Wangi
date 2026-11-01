@@ -10,7 +10,8 @@ import { createBusinessRouter } from './routes/businessRoutes.js';
 
 export function createApp(env = process.env, pool = createDatabasePool(env)) {
   const app = express();
-  const allowedOrigins = (env.FRONTEND_ORIGIN || 'http://localhost:5173')
+  app.set('trust proxy', 1);
+  const allowedOrigins = (env.FRONTEND_ORIGIN || 'http://localhost:5173,https://spk-nuansa-wangi.vercel.app')
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
