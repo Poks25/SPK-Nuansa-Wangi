@@ -8,6 +8,11 @@ import { createDatabasePool } from './config/database.js';
 import { createMasterDataRouter } from './routes/masterDataRoutes.js';
 import { createBusinessRouter } from './routes/businessRoutes.js';
 
+const DATABASE_UNAVAILABLE_CODES = new Set([
+  'ECONNREFUSED', 'ECONNRESET', 'ENOTFOUND', 'ETIMEDOUT',
+  'PROTOCOL_CONNECTION_LOST', 'ER_ACCESS_DENIED_ERROR', 'ER_BAD_DB_ERROR',
+]);
+
 export function createApp(env = process.env, pool = createDatabasePool(env)) {
   const app = express();
   app.set('trust proxy', 1);
@@ -17,6 +22,7 @@ export function createApp(env = process.env, pool = createDatabasePool(env)) {
     .filter(Boolean);
 
   app.disable('x-powered-by');
+  app.set('trust proxy', 1);
   app.use(cors({
     origin(origin, callback) {
       if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
@@ -32,14 +38,25 @@ export function createApp(env = process.env, pool = createDatabasePool(env)) {
   app.use(express.json({ limit: '20kb' }));
 
   // Health harus publik dan dideklarasikan sebelum middleware role pada /api.
-  app.get('/api/health', (_request, response) => {
-    response.status(200).json({
-      status: 'ok',
-      service: 'spk-nuansa-wangi-api',
-      phase: 3,
-      timestamp: new Date().toISOString(),
-      database: 'configured',
-    });
+  app.get('/api/health', async (_request, response) => {
+    try {
+      if (!pool) throw new Error('Database pool unavailable');
+      await pool.query('SELECT 1');
+      return response.status(200).json({
+        status: 'ok',
+        service: 'spk-nuansa-wangi-api',
+        timestamp: new Date().toISOString(),
+        database: 'connected',
+      });
+    } catch {
+      return response.status(503).json({
+        status: 'unavailable',
+        service: 'spk-nuansa-wangi-api',
+        timestamp: new Date().toISOString(),
+        database: 'unavailable',
+        message: 'Database belum dapat dihubungi.',
+      });
+    }
   });
 
   app.use('/api/auth', createAuthRouter(env, pool));
@@ -64,6 +81,12 @@ export function createApp(env = process.env, pool = createDatabasePool(env)) {
   app.use((error, _request, response, _next) => {
     // Jangan kirim kredensial, stack trace, atau detail internal ke client.
     console.error('API request failed');
+    if (DATABASE_UNAVAILABLE_CODES.has(error?.code)) {
+      return response.status(503).json({
+        error: 'DATABASE_UNAVAILABLE',
+        message: 'Database belum dapat dihubungi. Administrator perlu memeriksa konfigurasi database cloud.',
+      });
+    }
     response.status(500).json({
       error: 'INTERNAL_SERVER_ERROR',
       message: 'Terjadi kesalahan pada API.',

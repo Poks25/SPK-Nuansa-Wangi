@@ -9,7 +9,13 @@ async function request(path, options = {}) {
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...options.headers },
   });
-  const payload = await response.json().catch(() => ({}));
+  const contentType = response.headers.get('content-type') || '';
+  const payload = contentType.includes('application/json') ? await response.json().catch(() => ({})) : null;
+  if (payload === null) {
+    const error = new Error('Server API tidak terhubung. Backend belum aktif atau VITE_API_BASE_URL / proxy /api di Vercel belum diatur.');
+    error.status = response.status || 503;
+    throw error;
+  }
   if (!response.ok) {
     const error = new Error(payload.message || 'Permintaan belum dapat diproses.');
     error.status = response.status;

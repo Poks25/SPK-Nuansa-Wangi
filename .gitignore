@@ -5,4 +5,6 @@ coverage/
 .env.*
 !.env.example
 *.log
-database/backups/
+database/
+*.sql
+*.pem

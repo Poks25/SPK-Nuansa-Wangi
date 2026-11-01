@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "check": "node --check src/server.js && node --check src/config/database.js && node --check src/routes/authRoutes.js && node --check src/routes/masterDataRoutes.js && node --check src/routes/businessRoutes.js && node --check src/services/authService.js && node --check src/services/sawService.js && node --check src/middleware/auth.js && node --check scripts/create-password-hash.js && node --check scripts/create-recovery-code.js",
+    "check": "node --check src/server.js && node --check src/config/database.js && node --check src/routes/authRoutes.js && node --check src/routes/masterDataRoutes.js && node --check src/routes/businessRoutes.js && node --check src/services/authService.js && node --check src/services/sawService.js && node --check src/middleware/auth.js && node --check scripts/create-password-hash.js && node --check scripts/create-recovery-code.js && node --check scripts/reset-account.js",
     "test": "node --test",
     "auth:hash": "node scripts/create-password-hash.js",
-    "auth:recovery-code": "node scripts/create-recovery-code.js"
+    "auth:recovery-code": "node scripts/create-recovery-code.js",
+    "auth:reset": "node scripts/reset-account.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
